@@ -71,8 +71,7 @@ class MainGui(Tk):
             self.box_list.focus(item_id)
             self.box_list.selection_set(item_id)
 
-            self.cacheMsg = self.box_list.item(item_id)['values']
-
+            self.cacheMsg = self.box_list.item(item_id)['values']+[item_id]
             self.popup_menu.tk_popup(event.x_root, event.y_root)
 
     def on_menu_item1(self):
@@ -82,8 +81,8 @@ class MainGui(Tk):
         for line in result.stdout.split('\n'):
             if 'Average =' in line:
                 time_str = line.split('=')[-1].split('ms')[0].strip()
-                return time_str
-
+                value = self.cacheMsg[:-2]+[time_str+'ms']
+                self.box_list.item(self.cacheMsg[-1],values=value)
         return None  # 如果没有找到时间，返回None
 
     def on_menu_item2(self):
