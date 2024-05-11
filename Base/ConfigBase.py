@@ -34,7 +34,9 @@ class ConfigBase:
         inactive_ips = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = []
+            # for i in range(1, 255):  # 假设子网掩码为255.255.255.0
             for i in range(1, 2):  # 假设子网掩码为255.255.255.0
+
                 # ip_address = f"{self.HostIp}.{i:03d}"  # 格式化IP地址，确保IP是三位数（例如：001, 010, ...）
                 ip_address = "10.11.146.5"
                 future = executor.submit(self.ping_ip, ip_address)
