@@ -1,18 +1,14 @@
-Buttons = [
-    {
-        'key': '工具',
-        'value': [
-            'Item1',
-            'Item2',
-            'Item3'
-        ],
-    },
-    {
-        'key': '帮助',
-        'value': [
-            'Another1',
-            'Another2',
-            'Another3'
-        ],
-    }
+
+MessageList = [
+    "设备名字",
+    "设备IP",
+    "在线状态",
+    "工作状态",
+    "网络延迟"
+
 ]
+
+MenuList = [
+    ""
+]
+

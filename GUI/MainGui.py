@@ -1,18 +1,19 @@
-import subprocess
-import time
+from commtable import *
+from GuiUtill import *
 from tkinter import *
 from tkinter import ttk
-
-import commtable
+from MenuTabe import Buttons
+from runconfig import WindowsSize
 from util.HostIp import get_host_ip
-from GuiUtill import *
+from Base.ConfigBase import ConfigBase
 
 
-class MainGui(Tk):
+class MainGui(ConfigBase):
     def __init__(self):
         super().__init__()
-        self.columns = ["设备名字", "设备IP", "在线状态", "工作状态", "网络延迟"]
+
         self.cacheMsg = None
+        self.menu_window = None
         self.set_init_window()  # 初始化窗口
 
     def set_init_window(self):  # 窗口初始化配置
@@ -22,25 +23,78 @@ class MainGui(Tk):
         self.create_box_list()  # 系统状态
         self.creare_msgbox_list()  # 任务信息
 
+
     def create_windows(self):
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
-
-        window_width = self.winfo_reqwidth()
-        window_height = self.winfo_reqheight()
-
-        x = (screen_width // 2) - (window_width // 2)
-        y = (screen_height // 2) - (window_height // 2)
-        self.geometry(f"{1000}x{500}+{int(x - 400)}+{int(y - 200)}")
+        x = (screen_width // 2) - (WindowsSize['weight']//2)
+        y = (screen_height // 2) - (WindowsSize['hight']//2)
+        self.geometry(f"{WindowsSize['weight']}x{WindowsSize['hight']}+{int(x)}+{int(y)}")
 
     def create_button_list(self):
         self.button_frame = Frame(self)
         self.button_frame.pack(side='top', fill='both')
-        for indexButton, MsgButton in enumerate(commtable.Buttons):
-            self.hit_button = Button(self.button_frame, text=MsgButton['key'], width=10, height=3)
+        for IdButton, MsgButton in Buttons.items():
+            self.hit_button = Button(self.button_frame, text=IdButton, width=10, height=3)
+            self.hit_button.bind("<Button-1>",self.button_menu)
             self.hit_button.pack(side='left')
         self.extend_button = Button(self.button_frame, height=3, state='disabled')
         self.extend_button.pack(side='left', fill='x', expand=True)
+
+    def button_menu(self,event):
+        selectId = event.widget['text']  # 从事件对象中的控件获取文本
+        button_x = event.widget.winfo_rootx()
+        button_y = event.widget.winfo_rooty() + event.widget.winfo_height()
+        if self.menu_window and self.menu_window.winfo_exists():
+            self.menu_window.destroy()
+            self.menu_window = None
+        self.menu_window = Toplevel(self.button_frame)
+        self.menu_window.overrideredirect(True)
+        self.menu_window.withdraw()
+
+        # 创建一个菜单
+        menu = Menu(self.menu_window, tearoff=0)
+        for IdMenu,MsgMenu in Buttons[selectId].items():
+            menu.add_command(label=IdMenu, command=lambda :self.MsgMenu(IdMenu))
+
+        # 显示菜单
+        menu.post(button_x, button_y)  # 使用屏幕坐标来定位菜单
+
+        # 菜单会在用户与其交互后自动销毁，不需要额外的逻辑
+
+        # 阻止事件进一步传播
+        return "break"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     def create_box_list(self):
@@ -114,7 +168,6 @@ class MainGui(Tk):
         self.scrollbar.config(command=self.text_widget.yview)
         self.text_widget.config(yscrollcommand=self.scrollbar.set)
         self.text_widget.insert(END, "这是一些示例文本，用于展示滚动条的效果。\n" * 20)
-
         # 运行主程序
 
 
