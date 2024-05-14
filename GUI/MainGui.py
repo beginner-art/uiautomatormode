@@ -8,12 +8,13 @@ from util.HostIp import get_host_ip
 from Base.ConfigBase import ConfigBase
 
 
-class MainGui(ConfigBase):
+class MainGui(Tk):
     def __init__(self):
         super().__init__()
-
         self.cacheMsg = None
         self.menu_window = None
+
+        self.columnTable = MessageList  # 消息结构类
         self.set_init_window()  # 初始化窗口
 
     def set_init_window(self):  # 窗口初始化配置
@@ -23,12 +24,14 @@ class MainGui(ConfigBase):
         self.create_box_list()  # 系统状态
         self.creare_msgbox_list()  # 任务信息
 
+    def call_break_method(self, *args):  # TODO: *args待修改
+        return ConfigBase().call_other_subclass_method(*args)
 
     def create_windows(self):
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
-        x = (screen_width // 2) - (WindowsSize['weight']//2)
-        y = (screen_height // 2) - (WindowsSize['hight']//2)
+        x = (screen_width // 2) - (WindowsSize['weight'] // 2)
+        y = (screen_height // 2) - (WindowsSize['hight'] // 2)
         self.geometry(f"{WindowsSize['weight']}x{WindowsSize['hight']}+{int(x)}+{int(y)}")
 
     def create_button_list(self):
@@ -36,13 +39,13 @@ class MainGui(ConfigBase):
         self.button_frame.pack(side='top', fill='both')
         for IdButton, MsgButton in Buttons.items():
             self.hit_button = Button(self.button_frame, text=IdButton, width=10, height=3)
-            self.hit_button.bind("<Button-1>",self.button_menu)
+            self.hit_button.bind("<Button-1>", self.button_menu)
             self.hit_button.pack(side='left')
         self.extend_button = Button(self.button_frame, height=3, state='disabled')
         self.extend_button.pack(side='left', fill='x', expand=True)
 
-    def button_menu(self,event):
-        selectId = event.widget['text']  # 从事件对象中的控件获取文本
+    def button_menu(self, event):
+        selectId = event.widget['text']
         button_x = event.widget.winfo_rootx()
         button_y = event.widget.winfo_rooty() + event.widget.winfo_height()
         if self.menu_window and self.menu_window.winfo_exists():
@@ -51,64 +54,25 @@ class MainGui(ConfigBase):
         self.menu_window = Toplevel(self.button_frame)
         self.menu_window.overrideredirect(True)
         self.menu_window.withdraw()
-
-        # 创建一个菜单
         menu = Menu(self.menu_window, tearoff=0)
-        for IdMenu,MsgMenu in Buttons[selectId].items():
-            menu.add_command(label=IdMenu, command=lambda :self.MsgMenu(IdMenu))
-
-        # 显示菜单
-        menu.post(button_x, button_y)  # 使用屏幕坐标来定位菜单
-
-        # 菜单会在用户与其交互后自动销毁，不需要额外的逻辑
-
-        # 阻止事件进一步传播
+        for IdMenu, MsgMenu in Buttons[selectId].items():
+            menu.add_command(label=IdMenu, command=lambda: self.call_break_method(MsgMenu))
+        menu.post(button_x, button_y)
         return "break"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     def create_box_list(self):
         self.box_frame = Frame(self)
         self.box_frame.pack(side='top', fill='both')
-        self.box_list = ttk.Treeview(self.box_frame, show="headings", columns=self.columns)
+        self.box_list = ttk.Treeview(self.box_frame, show="headings", columns=self.columnTable)
         self.box_list.pack(pady=20, fill="both", expand=True)
         vsb = ttk.Scrollbar(self.box_frame, orient="vertical", command=self.box_list.yview)
         vsb.pack(side="right", fill="y")
         self.box_list.configure(yscrollcommand=vsb.set)
-        self.box_list.pack(side="left", fill="both", expand=True)  # 注意expand参数，它会尝试填充剩余空间
-        for column in self.columns:
+        self.box_list.pack(side="left", fill="both", expand=True)
+        for column in self.columnTable:
             self.box_list.heading(column, text=column)
-        for i in range(1, 12):  # 假设我们有100行数据
+        for i in range(1, 1):  # 假设我们有100行数据
             self.box_list.insert("", "end", values=(i, "10.11.146.5", "离线状态", "未工作状态", "0ms"))
 
         self.box_list.bind("<Button-3>", self.popup_menu)
@@ -120,11 +84,7 @@ class MainGui(ConfigBase):
 
 
     def popup_menu(self, event):
-        # 转换鼠标位置到Treeview控件的坐标系统
-        x = event.x
-        y = event.y
-        # 确定点击是否在项上
-        item_id = self.box_list.identify_row(y)
+        item_id = self.box_list.identify_row(event.y)
         if item_id:
             self.box_list.focus(item_id)
             self.box_list.selection_set(item_id)
@@ -142,18 +102,27 @@ class MainGui(ConfigBase):
                 self.box_list.item(self.cacheMsg[-1], values=value)
         return None  # 如果没有找到时间，返回None
 
-
     def on_menu_item2(self):
         if self.cacheMsg[1] == get_host_ip():
             device_ip = "127.0.0.1"
-            deviceprot=get_device_prot(device_ip)
-            devicename=get_device_model(f"{device_ip}:{deviceprot}")
+            deviceprot = get_device_prot(device_ip)
+            devicename = get_device_model(f"{device_ip}:{deviceprot}")
         else:
-            deviceprot=get_device_prot(self.cacheMsg[1])
-            devicename=get_device_model(f"{self.cacheMsg[1]}:{deviceprot}")
+            deviceprot = get_device_prot(self.cacheMsg[1])
+            devicename = get_device_model(f"{self.cacheMsg[1]}:{deviceprot}")
         self.cacheMsg[0] = devicename
         self.cacheMsg[2] = "已连接状态"
-        self.box_list.item(self.cacheMsg[-1],values=self.cacheMsg)
+        self.box_list.item(self.cacheMsg[-1], values=self.cacheMsg)
+
+
+
+
+
+
+
+
+
+
 
 
     def creare_msgbox_list(self):

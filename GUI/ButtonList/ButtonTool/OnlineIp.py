@@ -11,7 +11,6 @@ Get automatic local Ip
 class OnlineIp(ConfigBase):
     def __init__(self):
         super().__init__()
-        self.find_active_ips()
 
     def ping_ip(self, ip_address):
         """
@@ -47,5 +46,4 @@ class OnlineIp(ConfigBase):
                     inactive_ips.append(ip)
         self.active_ips = active_ips  # 在线设备
         self.inactive_ips = inactive_ips # 离线设备
-        print(self.active_ips)
-
+        return active_ips,inactive_ips

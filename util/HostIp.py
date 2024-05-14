@@ -14,7 +14,3 @@ def get_host_ip():
     finally:
         Slink.close()
     return address
-
-
-HostIp = get_host_ip()
-print(HostIp)
