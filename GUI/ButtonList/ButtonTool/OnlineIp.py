@@ -3,6 +3,7 @@ import platform
 import concurrent.futures
 
 from Base.ConfigBase import ConfigBase
+from StructClass.DeviceStatus import DeviceStatus
 
 """
 Get automatic local Ip
@@ -27,13 +28,11 @@ class OnlineIp(ConfigBase):
         """
         使用多线程在指定的子网内查找活动的IP地址。
         """
-        active_ips = []
-        inactive_ips = []
+
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = []
             # for i in range(1, 255):  # 假设子网掩码为255.255.255.0
             for i in range(1, 2):  # 假设子网掩码为255.255.255.0
-
                 # ip_address = f"{self.HostIp}.{i:03d}"  # 格式化IP地址，确保IP是三位数（例如：001, 010, ...）
                 ip_address = "10.11.146.5"
                 future = executor.submit(self.ping_ip, ip_address)
@@ -41,9 +40,10 @@ class OnlineIp(ConfigBase):
             for future in concurrent.futures.as_completed(futures):
                 ip, is_active = future.result()
                 if is_active:
-                    active_ips.append(ip)
+                    status = DeviceStatus(DeviceIp=ip,DeviceOnline="未连接状态")
+                    self.online_status.append(status)
                 else:
-                    inactive_ips.append(ip)
-        self.active_ips = active_ips  # 在线设备
-        self.inactive_ips = inactive_ips # 离线设备
-        return active_ips,inactive_ips
+                    status = DeviceStatus(DeviceIp=ip)
+                    self.online_status.append(status)
+
+        return self.online_status

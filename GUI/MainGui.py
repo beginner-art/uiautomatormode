@@ -13,7 +13,7 @@ class MainGui(Tk):
         super().__init__()
         self.cacheMsg = None
         self.menu_window = None
-
+        self.online_status = None
         self.columnTable = MessageList  # 消息结构类
         self.set_init_window()  # 初始化窗口
 
@@ -24,8 +24,17 @@ class MainGui(Tk):
         self.create_box_list()  # 系统状态
         self.creare_msgbox_list()  # 任务信息
 
+
+    def data_update_msg(self,MsgMenu):
+        self.online_status = self.call_break_method(MsgMenu)
+        for status in self.online_status:
+            self.box_list.insert("", "end", values=(status.to_set()))
+
+
     def call_break_method(self, *args):  # TODO: *args待修改
         return ConfigBase().call_other_subclass_method(*args)
+
+
 
     def create_windows(self):
         screen_width = self.winfo_screenwidth()
@@ -56,10 +65,9 @@ class MainGui(Tk):
         self.menu_window.withdraw()
         menu = Menu(self.menu_window, tearoff=0)
         for IdMenu, MsgMenu in Buttons[selectId].items():
-            menu.add_command(label=IdMenu, command=lambda: self.call_break_method(MsgMenu))
+            menu.add_command(label=IdMenu, command=lambda: self.data_update_msg(MsgMenu))
         menu.post(button_x, button_y)
         return "break"
-
 
     def create_box_list(self):
         self.box_frame = Frame(self)
@@ -72,9 +80,6 @@ class MainGui(Tk):
         self.box_list.pack(side="left", fill="both", expand=True)
         for column in self.columnTable:
             self.box_list.heading(column, text=column)
-        for i in range(1, 1):  # 假设我们有100行数据
-            self.box_list.insert("", "end", values=(i, "10.11.146.5", "离线状态", "未工作状态", "0ms"))
-
         self.box_list.bind("<Button-3>", self.popup_menu)
 
         # 创建右键菜单
@@ -113,17 +118,6 @@ class MainGui(Tk):
         self.cacheMsg[0] = devicename
         self.cacheMsg[2] = "已连接状态"
         self.box_list.item(self.cacheMsg[-1], values=self.cacheMsg)
-
-
-
-
-
-
-
-
-
-
-
 
     def creare_msgbox_list(self):
         self.msgbox_frame = Frame(self, bg='#696969')
