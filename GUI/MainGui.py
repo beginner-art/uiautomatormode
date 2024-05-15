@@ -1,4 +1,3 @@
-from commtable import *
 from GuiUtill import *
 from tkinter import *
 from tkinter import ttk
@@ -14,7 +13,7 @@ class MainGui(Tk):
         self.cacheMsg = None
         self.menu_window = None
         self.online_status = None
-        self.columnTable = MessageList  # 消息结构类
+        self.columnTable = ["设备名字","设备IP","在线状态","工作状态","网络延迟"]  # 消息结构类
         self.set_init_window()  # 初始化窗口
 
     def set_init_window(self):  # 窗口初始化配置

@@ -4,9 +4,14 @@ Buttons = {
     '项目': {
     },
     '工具': {
-        "获取在线Ip": (OnlineIp(),"find_active_ips")
+        "获取在线Ip": (OnlineIp(), "find_active_ips")
     },
     '帮助': {
     }
 
+}
+
+Boxs = {
+    "测试当前手机延迟Ping": (),
+    "连接工作手机": ()
 }
