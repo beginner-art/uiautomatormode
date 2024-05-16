@@ -13,7 +13,7 @@ class MainGui(Tk):
         self.cacheMsg = None
         self.menu_window = None
         self.online_status = []
-        self.columnTable = ["序号","设备名字", "设备IP", "在线状态", "工作状态", "网络延迟"]  # 消息结构类
+        self.columnTable = ["序号", "设备名字", "设备IP", "在线状态", "工作状态", "网络延迟"]  # 消息结构类
         self.set_init_window()  # 初始化窗口
 
     def set_init_window(self):  # 窗口初始化配置
@@ -23,17 +23,17 @@ class MainGui(Tk):
         self.create_box_list()  # 系统状态
         self.creare_msgbox_list()  # 任务信息
 
-    def data_update_msg(self, MsgMenu):    # TODO: 待修改
+    def data_update_msg(self, MsgMenu):  # TODO: 待修改
         MsgClass, MsgFunction = MsgMenu
         if self.cacheMsg:
-            online_status = self.call_break_method(MsgClass, MsgFunction,cacheMsg=self.cacheMsg)
+            online_status = self.call_break_method(MsgClass, MsgFunction, cacheMsg=self.cacheMsg)
         else:
             online_status = self.call_break_method(MsgClass, MsgFunction)
         if online_status in self.online_status:
-            self.box_list.item(self.item_id,values=online_status.to_set())
+            self.box_list.item(self.item_id, values=online_status.to_set())
             return
         self.online_status = online_status
-        for index,status in enumerate(self.online_status):
+        for index, status in enumerate(self.online_status):
             self.box_list.insert("", "end", values=status.to_set())
 
     def call_break_method(self, *args, **kwargs):
@@ -94,11 +94,9 @@ class MainGui(Tk):
         if self.item_id:
             self.box_list.focus(self.item_id)
             self.box_list.selection_set(self.item_id)
-            self.cacheMsg = self.online_status[self.box_list.item(self.item_id)['values'][0]]
+            index = self.box_list.item(self.item_id)['values'][0]
+            self.cacheMsg = self.online_status[int(index)]
             self.popup_menu.tk_popup(event.x_root, event.y_root)
-
-
-
 
     def creare_msgbox_list(self):
         self.msgbox_frame = Frame(self, bg='#696969')
