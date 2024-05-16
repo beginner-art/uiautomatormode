@@ -11,10 +11,10 @@ class ConfigBase:
         self.online_status = []
 
 
-    def call_other_subclass_method(self,args, **kwargs):
+    def call_other_subclass_method(self,*args, **kwargs):
         if hasattr(*args):
             method = getattr(*args)
-            return method()
+            return method(**kwargs)
         else:
             other_subclass_instance,method_name = args
             raise AttributeError(f"{other_subclass_instance.__class__.__name__} has no attribute {method_name}")

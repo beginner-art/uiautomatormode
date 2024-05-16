@@ -37,13 +37,13 @@ class OnlineIp(ConfigBase):
                 ip_address = "10.11.146.5"
                 future = executor.submit(self.ping_ip, ip_address)
                 futures.append(future)
-            for future in concurrent.futures.as_completed(futures):
+            for index,future in enumerate(concurrent.futures.as_completed(futures)):
                 ip, is_active = future.result()
                 if is_active:
-                    status = DeviceStatus(DeviceIp=ip,DeviceOnline="未连接状态")
+                    status = DeviceStatus(DeviceId=index,DeviceIp=ip,DeviceOnline="未连接状态")
                     self.online_status.append(status)
                 else:
-                    status = DeviceStatus(DeviceIp=ip)
+                    status = DeviceStatus(DeviceId=index,DeviceIp=ip)
                     self.online_status.append(status)
 
         return self.online_status

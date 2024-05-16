@@ -1,5 +1,6 @@
 class DeviceStatus:
-    def __init__(self, DeviceName=None, DeviceIp=None, DeviceOnline="离线状态", DeviceWork="未工作状态", DevicePing=None):
+    def __init__(self,DeviceId=None,DeviceName=None, DeviceIp=None, DeviceOnline="离线状态", DeviceWork="未工作状态", DevicePing=None):
+        self.DeviceId = DeviceId
         self.DeviceName = DeviceName
         self.DeviceIp = DeviceIp
         self.DeviceOnline = DeviceOnline
@@ -8,6 +9,7 @@ class DeviceStatus:
 
     def to_set(self):
         return (
+            self.DeviceId,
             self.DeviceName,
             self.DeviceIp,
             self.DeviceOnline,

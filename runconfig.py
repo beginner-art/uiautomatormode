@@ -1,4 +1,4 @@
 WindowsSize={
-    'weight':1000,
+    'weight':1300,
     'hight':500
 }

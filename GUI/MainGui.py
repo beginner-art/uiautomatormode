@@ -1,9 +1,9 @@
-from GuiUtill import *
 from tkinter import *
 from tkinter import ttk
-from MenuTabe import Buttons
+from functools import partial
+
+from MenuTabe import Buttons, Boxs
 from runconfig import WindowsSize
-from util.HostIp import get_host_ip
 from Base.ConfigBase import ConfigBase
 
 
@@ -12,8 +12,8 @@ class MainGui(Tk):
         super().__init__()
         self.cacheMsg = None
         self.menu_window = None
-        self.online_status = None
-        self.columnTable = ["设备名字","设备IP","在线状态","工作状态","网络延迟"]  # 消息结构类
+        self.online_status = []
+        self.columnTable = ["序号","设备名字", "设备IP", "在线状态", "工作状态", "网络延迟"]  # 消息结构类
         self.set_init_window()  # 初始化窗口
 
     def set_init_window(self):  # 窗口初始化配置
@@ -23,17 +23,21 @@ class MainGui(Tk):
         self.create_box_list()  # 系统状态
         self.creare_msgbox_list()  # 任务信息
 
+    def data_update_msg(self, MsgMenu):    # TODO: 待修改
+        MsgClass, MsgFunction = MsgMenu
+        if self.cacheMsg:
+            online_status = self.call_break_method(MsgClass, MsgFunction,cacheMsg=self.cacheMsg)
+        else:
+            online_status = self.call_break_method(MsgClass, MsgFunction)
+        if online_status in self.online_status:
+            self.box_list.item(self.item_id,values=online_status.to_set())
+            return
+        self.online_status = online_status
+        for index,status in enumerate(self.online_status):
+            self.box_list.insert("", "end", values=status.to_set())
 
-    def data_update_msg(self,MsgMenu):
-        self.online_status = self.call_break_method(MsgMenu)
-        for status in self.online_status:
-            self.box_list.insert("", "end", values=(status.to_set()))
-
-
-    def call_break_method(self, *args):  # TODO: *args待修改
-        return ConfigBase().call_other_subclass_method(*args)
-
-
+    def call_break_method(self, *args, **kwargs):
+        return ConfigBase().call_other_subclass_method(*args, **kwargs)
 
     def create_windows(self):
         screen_width = self.winfo_screenwidth()
@@ -64,7 +68,7 @@ class MainGui(Tk):
         self.menu_window.withdraw()
         menu = Menu(self.menu_window, tearoff=0)
         for IdMenu, MsgMenu in Buttons[selectId].items():
-            menu.add_command(label=IdMenu, command=lambda: self.data_update_msg(MsgMenu))
+            menu.add_command(label=IdMenu, command=partial(self.data_update_msg, MsgMenu))
         menu.post(button_x, button_y)
         return "break"
 
@@ -80,43 +84,21 @@ class MainGui(Tk):
         for column in self.columnTable:
             self.box_list.heading(column, text=column)
         self.box_list.bind("<Button-3>", self.popup_menu)
-
-        # 创建右键菜单
         self.popup_menu = Menu(self.box_frame, tearoff=0)
-        self.popup_menu.add_command(label="测试当前手机延迟Ping", command=self.on_menu_item1)
-        self.popup_menu.add_command(label="连接工作手机", command=self.on_menu_item2)
-
+        for IdMenu, MsgMenu in Boxs.items():
+            command_func = partial(self.data_update_msg, MsgMenu)
+            self.popup_menu.add_command(label=IdMenu, command=command_func)
 
     def popup_menu(self, event):
-        item_id = self.box_list.identify_row(event.y)
-        if item_id:
-            self.box_list.focus(item_id)
-            self.box_list.selection_set(item_id)
-            self.cacheMsg = self.box_list.item(item_id)['values'] + [item_id]
+        self.item_id = self.box_list.identify_row(event.y)
+        if self.item_id:
+            self.box_list.focus(self.item_id)
+            self.box_list.selection_set(self.item_id)
+            self.cacheMsg = self.online_status[self.box_list.item(self.item_id)['values'][0]]
             self.popup_menu.tk_popup(event.x_root, event.y_root)
 
-    def on_menu_item1(self):
-        result = subprocess.run(['ping', '-n', '1', self.cacheMsg[1]], stdout=subprocess.PIPE, universal_newlines=True)
-        if result.returncode != 0:
-            return None
-        for line in result.stdout.split('\n'):
-            if 'Average =' in line:
-                time_str = line.split('=')[-1].split('ms')[0].strip()
-                value = self.cacheMsg[:-2] + [time_str + 'ms']
-                self.box_list.item(self.cacheMsg[-1], values=value)
-        return None  # 如果没有找到时间，返回None
 
-    def on_menu_item2(self):
-        if self.cacheMsg[1] == get_host_ip():
-            device_ip = "127.0.0.1"
-            deviceprot = get_device_prot(device_ip)
-            devicename = get_device_model(f"{device_ip}:{deviceprot}")
-        else:
-            deviceprot = get_device_prot(self.cacheMsg[1])
-            devicename = get_device_model(f"{self.cacheMsg[1]}:{deviceprot}")
-        self.cacheMsg[0] = devicename
-        self.cacheMsg[2] = "已连接状态"
-        self.box_list.item(self.cacheMsg[-1], values=self.cacheMsg)
+
 
     def creare_msgbox_list(self):
         self.msgbox_frame = Frame(self, bg='#696969')
