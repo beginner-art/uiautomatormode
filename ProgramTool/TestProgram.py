@@ -1,5 +1,5 @@
-from Base.MainBase import MainBase
+from ProgramTool.ProgramBase import ProgramBase
 
 
-class TestProgram(MainBase):
+class TestProgram(ProgramBase):
     pass

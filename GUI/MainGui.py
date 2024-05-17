@@ -98,6 +98,13 @@ class MainGui(Tk):
             self.cacheMsg = self.online_status[int(index)]
             self.popup_menu.tk_popup(event.x_root, event.y_root)
 
+
+
+
+
+
+
+
     def creare_msgbox_list(self):
         self.msgbox_frame = Frame(self, bg='#696969')
         self.msgbox_frame.pack(side="top", fill='both', expand=True, padx=10, pady=10)

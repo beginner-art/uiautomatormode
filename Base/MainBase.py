@@ -15,15 +15,14 @@ class MainBase(threading.Thread):
     def run(self):
         while not self.stop_event.is_set():
             print(f"开始线程: {self.thread_id}")
-            print_time(self.thread_id, 5)
+            self.test_flow(self.thread_id, 5)
         print(f"退出线程: {self.name}")
 
     # 定义一个函数，用于在线程中打印时间
+    def test_flow(self, thread_id, param):
+        pass
 
 
-def print_time(thread_name, delay):
-    time.sleep(delay)
-    print(f"{thread_name} 时间: {time.ctime(time.time())}")
 
     # 主线程中的代码
 def stop_thread_by_id(thread_id, stop_events):
@@ -58,8 +57,6 @@ def receive_data():
 
         t = MainBase(len(threads), f"线程-{data}", stop_events)
         threads.append(t)
-        print(threads)
-
         t.start()
 
 
