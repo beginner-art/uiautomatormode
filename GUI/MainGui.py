@@ -10,9 +10,12 @@ from Base.ConfigBase import ConfigBase
 class MainGui(Tk):
     def __init__(self):
         super().__init__()
+        self.item_id = None
         self.cacheMsg = None
         self.menu_window = None
+        self.ctrl_pressed = False
         self.online_status = []
+        self.selected_items = set()  # 存储选中的项
         self.columnTable = ["序号", "设备名字", "设备IP", "在线状态", "工作状态", "网络延迟"]  # 消息结构类
         self.set_init_window()  # 初始化窗口
 
@@ -83,7 +86,11 @@ class MainGui(Tk):
         self.box_list.pack(side="left", fill="both", expand=True)
         for column in self.columnTable:
             self.box_list.heading(column, text=column)
+        self.box_list.bind("<Button-1>", self.on_click)
         self.box_list.bind("<Button-3>", self.popup_menu)
+        self.bind('<Key-Control_L>', self.on_ctrl_press)
+        self.bind('<KeyRelease-Control_L>', self.on_ctrl_release)
+
         self.popup_menu = Menu(self.box_frame, tearoff=0)
         for IdMenu, MsgMenu in Boxs.items():
             command_func = partial(self.data_update_msg, MsgMenu)
@@ -98,12 +105,22 @@ class MainGui(Tk):
             self.cacheMsg = self.online_status[int(index)]
             self.popup_menu.tk_popup(event.x_root, event.y_root)
 
+    def on_click(self, event):
+        if self.ctrl_pressed:
+            index = self.box_list.identify_row(event.y)
+            if index in ('none', ''):
+                return
+            if index in self.selected_items:
+                self.selected_items.remove(index)
+            else:
+                self.selected_items.add(index)
 
+    def on_ctrl_press(self, event):
+        self.selected_items = set()
+        self.ctrl_pressed = True
 
-
-
-
-
+    def on_ctrl_release(self, event):  #
+        self.ctrl_pressed = False
 
     def creare_msgbox_list(self):
         self.msgbox_frame = Frame(self, bg='#696969')
