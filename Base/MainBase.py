@@ -1,5 +1,4 @@
 import threading
-import time
 
 # 全局变量
 threads = []
@@ -10,25 +9,22 @@ quitid = None
 class MainBase(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
-        self.cacheMsg=None
-
+        self.model_state = False
+        self.cacheMsg = None
 
     def stop_model_event(self):
-        pass
+        self.model_state = False
+        self.join(30)
 
     def run(self):
-        while not False:
-            print(f"开始线程: { self.cacheMsg.DeviceName}")
+        while self.model_state:
+            print(f"开始线程: {self.cacheMsg.DeviceName}")
             self.test_flow()
-            break
-        print(f"退出线程: { self.cacheMsg.DeviceName}")
+        print(f"退出线程: {self.cacheMsg.DeviceName}")
 
     # 定义一个函数，用于在线程中打印时间
     def test_flow(self):
         pass
-
-
-
 
 #     # 主线程中的代码
 # def stop_thread_by_id(thread_id, stop_events):

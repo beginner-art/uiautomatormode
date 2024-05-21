@@ -1,3 +1,5 @@
+import time
+
 from ProgramTool.ProgramBase import ProgramBase
 from StructClass.DeviceStatus import DeviceStatus
 
@@ -7,7 +9,9 @@ class TestProgram(ProgramBase):
         super().__init__()
 
     def test_flow(self):
-        print("Hello,World")
-
+        print(self.cacheMsg)
+        for i in range(5):
+            print("Hello,World",i)
+            time.sleep(1)
 
 

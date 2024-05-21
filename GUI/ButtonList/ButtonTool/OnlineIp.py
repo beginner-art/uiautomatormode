@@ -45,5 +45,4 @@ class OnlineIp(ConfigBase):
                 else:
                     status = DeviceStatus(DeviceId=index,DeviceIp=ip)
                     self.online_status.append(status)
-
         return self.online_status

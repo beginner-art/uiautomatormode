@@ -11,7 +11,7 @@ class MainGui(Tk):
     def __init__(self):
         super().__init__()
         self.item_id = None
-        self.cacheMsg = None
+        self.cacheMsg = 123
         self.menu_window = None
         self.ctrl_pressed = False
         self.online_status = []
@@ -26,21 +26,73 @@ class MainGui(Tk):
         self.create_box_list()  # 系统状态
         self.creare_msgbox_list()  # 任务信息
 
-    def data_update_msg(self, MsgMenu):  # TODO: 待修改
+
+
+
+
+    """
+    在系统中一个ip对应一个设备
+    :return
+    """
+
+
+    def update_list_state(self,online_state):
+
+        for device_new in online_state:
+            found = False
+            for device_old in self.online_status:
+                if device_old.DeviceIp == device_new.DeviceIp:
+                    self.box_list.item(self.item_id, values=device_new.to_set())
+                    found = True
+                    break
+            if not found:
+                self.online_status.append(online_state)
+                self.box_list.insert("", "end", values=device_new.to_set())
+
+
+    def data_update_msg(self, MsgMenu,**kwargs):  # TODO: 待修改
+        MsgClass, MsgFunction = MsgMenu
+        online_state = self.call_break_method(MsgClass, MsgFunction,**kwargs)
+        self.update_list_state(online_state)
+
+
+
+
+    def test(self,MsgMenu):
         MsgClass, MsgFunction = MsgMenu
         if self.cacheMsg:
             online_status = self.call_break_method(MsgClass, MsgFunction, cacheMsg=self.cacheMsg)
+        elif self.selected_items:
+            for i in self.selected_items:
+                i.DeviceWork = "工作状态"
+                online_status = i
+                self.call_break_method(MsgClass, MsgFunction, cacheMsg=i)
+            return
         else:
             online_status = self.call_break_method(MsgClass, MsgFunction)
         if online_status in self.online_status:
             self.box_list.item(self.item_id, values=online_status.to_set())
             return
+        print("self.online_status data_update_msg",self.online_status)
         self.online_status = online_status
         for index, status in enumerate(self.online_status):
             self.box_list.insert("", "end", values=status.to_set())
 
+
+
+
+
+
+
+
+
+
     def call_break_method(self, *args, **kwargs):
+        print(kwargs)
         return ConfigBase().call_other_subclass_method(*args, **kwargs)
+
+
+
 
     def create_windows(self):
         screen_width = self.winfo_screenwidth()
@@ -75,6 +127,7 @@ class MainGui(Tk):
         menu.post(button_x, button_y)
         return "break"
 
+
     def create_box_list(self):
         self.box_frame = Frame(self)
         self.box_frame.pack(side='top', fill='both')
@@ -90,13 +143,13 @@ class MainGui(Tk):
         self.box_list.bind("<Button-3>", self.popup_menu)
         self.bind('<Key-Control_L>', self.on_ctrl_press)
         self.bind('<KeyRelease-Control_L>', self.on_ctrl_release)
-
         self.popup_menu = Menu(self.box_frame, tearoff=0)
         for IdMenu, MsgMenu in Boxs.items():
-            command_func = partial(self.data_update_msg, MsgMenu)
+            command_func = partial(self.data_update_msg, MsgMenu,cacheMsg=self.cacheMsg)
             self.popup_menu.add_command(label=IdMenu, command=command_func)
 
     def popup_menu(self, event):
+        self.cacheMsg = None
         self.item_id = self.box_list.identify_row(event.y)
         if self.item_id:
             self.box_list.focus(self.item_id)
@@ -105,21 +158,26 @@ class MainGui(Tk):
             self.cacheMsg = self.online_status[int(index)]
             self.popup_menu.tk_popup(event.x_root, event.y_root)
 
+
+
+
     def on_click(self, event):
         if self.ctrl_pressed:
-            index = self.box_list.identify_row(event.y)
-            if index in ('none', ''):
+            item_id = self.box_list.identify_row(event.y)
+            if item_id in ('none', ''):
                 return
-            if index in self.selected_items:
-                self.selected_items.remove(index)
+            index = self.box_list.item(item_id)['values'][0]
+            if item_id in self.selected_items:
+                self.selected_items.remove(self.online_status[int(index)])
             else:
-                self.selected_items.add(index)
+                self.selected_items.add(self.online_status[int(index)])
 
     def on_ctrl_press(self, event):
-        self.selected_items = set()
-        self.ctrl_pressed = True
+        if not self.ctrl_pressed:
+            self.selected_items = set()
+            self.ctrl_pressed = True
 
-    def on_ctrl_release(self, event):  #
+    def on_ctrl_release(self, event):
         self.ctrl_pressed = False
 
     def creare_msgbox_list(self):

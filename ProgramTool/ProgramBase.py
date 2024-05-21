@@ -7,7 +7,7 @@ class ProgramBase(MainBase):
 
     def start_flow(self, cacheMsg=None):
         self.cacheMsg = cacheMsg
-        self.start()
+        self.model_state=True
+        if self.model_state:
+            self.start()
 
-    def stop_flow(self):
-        pass

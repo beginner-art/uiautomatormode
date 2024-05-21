@@ -18,5 +18,5 @@ Buttons = {
 Boxs = {
     "测试当前手机延迟Ping": (TestPing(),"test_model_ping"),
     "连接工作手机": (ConnectPhone(),"test_model_connect"),
-    # "终止当前任务":()
+    "终止当前任务":(TestProgram(),"stop_model_event")
 }
