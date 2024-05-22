@@ -1,6 +1,7 @@
 import os
 import platform
 import concurrent.futures
+import threading
 
 from Base.ConfigBase import ConfigBase
 from StructClass.DeviceStatus import DeviceStatus
@@ -32,9 +33,8 @@ class OnlineIp(ConfigBase):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = []
             # for i in range(1, 255):  # 假设子网掩码为255.255.255.0
-            for i in range(1, 2):  # 假设子网掩码为255.255.255.0
-                # ip_address = f"{self.HostIp}.{i:03d}"  # 格式化IP地址，确保IP是三位数（例如：001, 010, ...）
-                ip_address = "10.11.146.5"
+            for i in range(5, 7):  # 假设子网掩码为255.255.255.0
+                ip_address = f"{self.HostIp}.{i}"  # 格式化IP地址，确保IP是三位数（例如：001, 010, ...）
                 future = executor.submit(self.ping_ip, ip_address)
                 futures.append(future)
             for index,future in enumerate(concurrent.futures.as_completed(futures)):
@@ -45,4 +45,18 @@ class OnlineIp(ConfigBase):
                 else:
                     status = DeviceStatus(DeviceId=index,DeviceIp=ip)
                     self.online_status.append(status)
+            return self.online_status
+
+    def getOnlineIp(self):
+        event = threading.Event()
+        def worker():
+            self.online_status = self.find_active_ips()  # 更新共享资源
+            event.set()  # 设置事件，表示工作已完成
+
+        thread = threading.Thread(target=worker)
+        thread.start()
+        event.wait()
         return self.online_status
+
+
+

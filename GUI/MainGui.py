@@ -1,7 +1,6 @@
 from tkinter import *
 from tkinter import ttk
 from functools import partial
-
 from MenuTabe import Buttons, Boxs
 from runconfig import WindowsSize
 from Base.ConfigBase import ConfigBase
@@ -11,11 +10,12 @@ class MainGui(Tk):
     def __init__(self):
         super().__init__()
         self.item_id = None
-        self.cacheMsg = 123
+        self.cacheMsg = None
         self.menu_window = None
         self.ctrl_pressed = False
+        self.selected_items = None
+
         self.online_status = []
-        self.selected_items = set()  # 存储选中的项
         self.columnTable = ["序号", "设备名字", "设备IP", "在线状态", "工作状态", "网络延迟"]  # 消息结构类
         self.set_init_window()  # 初始化窗口
 
@@ -26,18 +26,14 @@ class MainGui(Tk):
         self.create_box_list()  # 系统状态
         self.creare_msgbox_list()  # 任务信息
 
-
-
-
-
     """
     在系统中一个ip对应一个设备
     :return
     """
 
-
-    def update_list_state(self,online_state):
-
+    def update_list_state(self, online_state):
+        if not isinstance(online_state, list):
+            online_state = [online_state]
         for device_new in online_state:
             found = False
             for device_old in self.online_status:
@@ -46,53 +42,29 @@ class MainGui(Tk):
                     found = True
                     break
             if not found:
-                self.online_status.append(online_state)
+                print(device_new.DeviceIp)
+                self.online_status.extend(device_new)
+                print("self.online_status",self.online_status)
                 self.box_list.insert("", "end", values=device_new.to_set())
 
+    def get_kwargs_msg(self, **kwargs):  # TODO: 待修改
+        for i in list(kwargs.keys()):
+            if getattr(self, i, None) is None:
+                return {}
+            kwargs[i] = getattr(self, i, None)
+            return kwargs
 
-    def data_update_msg(self, MsgMenu,**kwargs):  # TODO: 待修改
+
+    def data_update_msg(self, MsgMenu, **kwargs):  # TODO: 待修改
         MsgClass, MsgFunction = MsgMenu
-        online_state = self.call_break_method(MsgClass, MsgFunction,**kwargs)
+        if kwargs:
+            kwargs = self.get_kwargs_msg(**kwargs)
+
+        online_state = self.call_break_method(MsgClass, MsgFunction, **kwargs)
         self.update_list_state(online_state)
 
-
-
-
-    def test(self,MsgMenu):
-        MsgClass, MsgFunction = MsgMenu
-        if self.cacheMsg:
-            online_status = self.call_break_method(MsgClass, MsgFunction, cacheMsg=self.cacheMsg)
-        elif self.selected_items:
-            for i in self.selected_items:
-                i.DeviceWork = "工作状态"
-                online_status = i
-                self.call_break_method(MsgClass, MsgFunction, cacheMsg=i)
-            return
-        else:
-            online_status = self.call_break_method(MsgClass, MsgFunction)
-        if online_status in self.online_status:
-            self.box_list.item(self.item_id, values=online_status.to_set())
-            return
-        print("self.online_status data_update_msg",self.online_status)
-        self.online_status = online_status
-        for index, status in enumerate(self.online_status):
-            self.box_list.insert("", "end", values=status.to_set())
-
-
-
-
-
-
-
-
-
-
     def call_break_method(self, *args, **kwargs):
-        print(kwargs)
         return ConfigBase().call_other_subclass_method(*args, **kwargs)
-
-
-
 
     def create_windows(self):
         screen_width = self.winfo_screenwidth()
@@ -123,10 +95,10 @@ class MainGui(Tk):
         self.menu_window.withdraw()
         menu = Menu(self.menu_window, tearoff=0)
         for IdMenu, MsgMenu in Buttons[selectId].items():
-            menu.add_command(label=IdMenu, command=partial(self.data_update_msg, MsgMenu))
+            command_func = partial(self.data_update_msg, MsgMenu, selected_items=None)
+            menu.add_command(label=IdMenu, command=command_func)
         menu.post(button_x, button_y)
         return "break"
-
 
     def create_box_list(self):
         self.box_frame = Frame(self)
@@ -145,7 +117,7 @@ class MainGui(Tk):
         self.bind('<KeyRelease-Control_L>', self.on_ctrl_release)
         self.popup_menu = Menu(self.box_frame, tearoff=0)
         for IdMenu, MsgMenu in Boxs.items():
-            command_func = partial(self.data_update_msg, MsgMenu,cacheMsg=self.cacheMsg)
+            command_func = partial(self.data_update_msg, MsgMenu, cacheMsg=None)
             self.popup_menu.add_command(label=IdMenu, command=command_func)
 
     def popup_menu(self, event):
@@ -158,9 +130,6 @@ class MainGui(Tk):
             self.cacheMsg = self.online_status[int(index)]
             self.popup_menu.tk_popup(event.x_root, event.y_root)
 
-
-
-
     def on_click(self, event):
         if self.ctrl_pressed:
             item_id = self.box_list.identify_row(event.y)
@@ -168,13 +137,13 @@ class MainGui(Tk):
                 return
             index = self.box_list.item(item_id)['values'][0]
             if item_id in self.selected_items:
-                self.selected_items.remove(self.online_status[int(index)])
+                self.selected_items.pop(self.online_status[int(index)])
             else:
-                self.selected_items.add(self.online_status[int(index)])
+                self.selected_items.append(self.online_status[int(index)])
 
     def on_ctrl_press(self, event):
         if not self.ctrl_pressed:
-            self.selected_items = set()
+            self.selected_items = list()
             self.ctrl_pressed = True
 
     def on_ctrl_release(self, event):
