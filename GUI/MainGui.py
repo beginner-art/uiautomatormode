@@ -42,9 +42,7 @@ class MainGui(Tk):
                     found = True
                     break
             if not found:
-                print(device_new.DeviceIp)
-                self.online_status.extend(device_new)
-                print("self.online_status",self.online_status)
+                self.online_status.append(device_new)
                 self.box_list.insert("", "end", values=device_new.to_set())
 
     def get_kwargs_msg(self, **kwargs):  # TODO: 待修改
