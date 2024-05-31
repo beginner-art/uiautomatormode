@@ -14,5 +14,5 @@ class ProgramBase(MainBase):
                 self.start()
                 cacheMsg.DeviceWork = "工作状态"
 
-            return cacheMsg
+            return self.selected_items
 

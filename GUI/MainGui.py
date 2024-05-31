@@ -1,10 +1,12 @@
+import datetime
+import queue
+import time
 from tkinter import *
 from tkinter import ttk
 from functools import partial
 from MenuTabe import Buttons, Boxs
 from runconfig import WindowsSize
-from Base.ConfigBase import ConfigBase
-
+import threading
 
 class MainGui(Tk):
     def __init__(self):
@@ -14,7 +16,7 @@ class MainGui(Tk):
         self.menu_window = None
         self.ctrl_pressed = False
         self.selected_items = None
-
+        self.result_queue = queue.Queue()
         self.online_status = []
         self.columnTable = ["序号", "设备名字", "设备IP", "在线状态", "工作状态", "网络延迟"]  # 消息结构类
         self.set_init_window()  # 初始化窗口
@@ -31,13 +33,14 @@ class MainGui(Tk):
     :return
     """
 
-    def update_list_state(self, online_state):
+    def update_list_state(self, online_state):  # TODO: 待修改
         if not isinstance(online_state, list):
             online_state = [online_state]
         for device_new in online_state:
             found = False
             for device_old in self.online_status:
                 if device_old.DeviceIp == device_new.DeviceIp:
+
                     self.box_list.item(self.item_id, values=device_new.to_set())
                     found = True
                     break
@@ -45,7 +48,8 @@ class MainGui(Tk):
                 self.online_status.append(device_new)
                 self.box_list.insert("", "end", values=device_new.to_set())
 
-    def get_kwargs_msg(self, **kwargs):  # TODO: 待修改
+
+    def get_kwargs_msg(self, **kwargs):
         for i in list(kwargs.keys()):
             if getattr(self, i, None) is None:
                 return {}
@@ -53,16 +57,33 @@ class MainGui(Tk):
             return kwargs
 
 
-    def data_update_msg(self, MsgMenu, **kwargs):  # TODO: 待修改
+    def data_update_msg(self, MsgMenu, **kwargs):
         MsgClass, MsgFunction = MsgMenu
         if kwargs:
             kwargs = self.get_kwargs_msg(**kwargs)
+        thread = threading.Thread(target=self.call_break_method, args=(MsgClass, MsgFunction), kwargs=kwargs)
+        thread.start()
+        self.box_frame.after(100,self.check_for_result)
 
-        online_state = self.call_break_method(MsgClass, MsgFunction, **kwargs)
-        self.update_list_state(online_state)
 
     def call_break_method(self, *args, **kwargs):
-        return ConfigBase().call_other_subclass_method(*args, **kwargs)
+        if hasattr(*args):
+            method = getattr(*args)
+            result = method(**kwargs)
+            self.result_queue.put(result)
+        else:
+            other_subclass_instance, method_name = args
+            raise AttributeError(f"{other_subclass_instance.__class__.__name__} has no attribute {method_name}")
+
+    def get_result_from_queue(self):
+        return self.result_queue.get_nowait()
+
+    def check_for_result(self):
+        try:
+            online_state = self.get_result_from_queue()
+            self.update_list_state(online_state)
+        except queue.Empty:
+            self.box_frame.after(100, self.check_for_result)  # 100 毫秒后再次检查
 
     def create_windows(self):
         screen_width = self.winfo_screenwidth()
