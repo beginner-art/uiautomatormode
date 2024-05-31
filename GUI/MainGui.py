@@ -11,6 +11,7 @@ import threading
 class MainGui(Tk):
     def __init__(self):
         super().__init__()
+        self.text_widget = None
         self.item_id = None
         self.cacheMsg = None
         self.menu_window = None
@@ -33,20 +34,24 @@ class MainGui(Tk):
     :return
     """
 
-    def update_list_state(self, online_state):  # TODO: 待修改
-        if not isinstance(online_state, list):
-            online_state = [online_state]
-        for device_new in online_state:
-            found = False
-            for device_old in self.online_status:
-                if device_old.DeviceIp == device_new.DeviceIp:
 
-                    self.box_list.item(self.item_id, values=device_new.to_set())
-                    found = True
-                    break
-            if not found:
-                self.online_status.append(device_new)
-                self.box_list.insert("", "end", values=device_new.to_set())
+
+
+    def update_list_state(self, online_state):  # TODO: 待修改
+        self.printf("123456")
+        # if not isinstance(online_state, list):
+        #     online_state = [online_state]
+        # for device_new in online_state:
+        #     found = False
+        #     for device_old in self.online_status:
+        #         if device_old.DeviceIp == device_new.DeviceIp:
+        #
+        #             self.box_list.item(self.item_id, values=device_new.to_set())
+        #             found = True
+        #             break
+        #     if not found:
+        #         self.online_status.append(device_new)
+        #         self.box_list.insert("", "end", values=device_new.to_set())
 
 
     def get_kwargs_msg(self, **kwargs):
@@ -169,18 +174,19 @@ class MainGui(Tk):
         self.ctrl_pressed = False
 
     def creare_msgbox_list(self):
-        self.msgbox_frame = Frame(self, bg='#696969')
-        self.msgbox_frame.pack(side="top", fill='both', expand=True, padx=10, pady=10)
-        self.text_frame = Frame(self.msgbox_frame, bg='#696969')
-        self.text_frame.pack(side="left", fill='both', expand=True, padx=10, pady=10)
-        self.scrollbar = Scrollbar(self.msgbox_frame)
-        self.scrollbar.pack(side="right", fill='y')
-        self.text_widget = Text(self.text_frame, fg='white', bg='#696969', wrap='word')
+        msgbox_frame = Frame(self, bg='#696969')
+        msgbox_frame.pack(side="top", fill='both', expand=True, padx=10, pady=10)
+        text_frame  = Frame(msgbox_frame, bg='#696969')
+        text_frame .pack(side="left", fill='both', expand=True, padx=10, pady=10)
+        scrollbar = Scrollbar(msgbox_frame)
+        scrollbar.pack(side="right", fill='y')
+        self.text_widget = Text(text_frame, fg='white', bg='#696969', wrap='word')
         self.text_widget.pack(side="left", fill='both', expand=True)
-        self.scrollbar.config(command=self.text_widget.yview)
-        self.text_widget.config(yscrollcommand=self.scrollbar.set)
-        self.text_widget.insert(END, "这是一些示例文本，用于展示滚动条的效果。\n" * 20)
-        # 运行主程序
+        scrollbar.config(command=self.text_widget.yview)
+        self.text_widget.config(yscrollcommand=scrollbar.set)
+
+    def printf(self,msg):
+        self.text_widget.insert(END, msg)
 
 
 if __name__ == "__main__":
