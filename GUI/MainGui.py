@@ -8,6 +8,7 @@ from MenuTabe import Buttons, Boxs
 from runconfig import WindowsSize
 import threading
 
+
 class MainGui(Tk):
     def __init__(self):
         super().__init__()
@@ -18,7 +19,7 @@ class MainGui(Tk):
         self.ctrl_pressed = False
         self.selected_items = None
         self.result_queue = queue.Queue()
-        self.online_status = []
+        self.online_status = {}
         self.columnTable = ["序号", "设备名字", "设备IP", "在线状态", "工作状态", "网络延迟"]  # 消息结构类
         self.set_init_window()  # 初始化窗口
 
@@ -34,25 +35,23 @@ class MainGui(Tk):
     :return
     """
 
-
-
-
     def update_list_state(self, online_state):  # TODO: 待修改
-        self.printf("123456")
-        # if not isinstance(online_state, list):
-        #     online_state = [online_state]
-        # for device_new in online_state:
-        #     found = False
-        #     for device_old in self.online_status:
-        #         if device_old.DeviceIp == device_new.DeviceIp:
-        #
-        #             self.box_list.item(self.item_id, values=device_new.to_set())
-        #             found = True
-        #             break
-        #     if not found:
-        #         self.online_status.append(device_new)
-        #         self.box_list.insert("", "end", values=device_new.to_set())
-
+        if not isinstance(online_state, list):
+            online_state = [online_state]
+        for device_new in online_state:
+            found = False
+            for device_old in list(self.online_status.keys()):
+                if device_old == device_new.DeviceIp:
+                    self.box_list.item(self.online_status[device_old]["itemId"], values=device_new.to_set())
+                    self.online_status[device_old]["deviceMsg"] = device_new
+                    found = True
+                    break
+            if not found:
+                itemId = self.box_list.insert("", "end", values=device_new.to_set())
+                self.online_status[device_new.DeviceIp] = {
+                    "itemId": itemId,
+                    "deviceMsg": device_new
+                }
 
     def get_kwargs_msg(self, **kwargs):
         for i in list(kwargs.keys()):
@@ -61,15 +60,13 @@ class MainGui(Tk):
             kwargs[i] = getattr(self, i, None)
             return kwargs
 
-
     def data_update_msg(self, MsgMenu, **kwargs):
         MsgClass, MsgFunction = MsgMenu
         if kwargs:
             kwargs = self.get_kwargs_msg(**kwargs)
         thread = threading.Thread(target=self.call_break_method, args=(MsgClass, MsgFunction), kwargs=kwargs)
         thread.start()
-        self.box_frame.after(100,self.check_for_result)
-
+        self.box_frame.after(100, self.check_for_result)
 
     def call_break_method(self, *args, **kwargs):
         if hasattr(*args):
@@ -150,8 +147,8 @@ class MainGui(Tk):
         if self.item_id:
             self.box_list.focus(self.item_id)
             self.box_list.selection_set(self.item_id)
-            index = self.box_list.item(self.item_id)['values'][0]
-            self.cacheMsg = self.online_status[int(index)]
+            DeviceIp = self.box_list.item(self.item_id)['values'][2]
+            self.cacheMsg = self.online_status[DeviceIp]["deviceMsg"]
             self.popup_menu.tk_popup(event.x_root, event.y_root)
 
     def on_click(self, event):
@@ -159,11 +156,11 @@ class MainGui(Tk):
             item_id = self.box_list.identify_row(event.y)
             if item_id in ('none', ''):
                 return
-            index = self.box_list.item(item_id)['values'][0]
+            DeviceIp = self.box_list.item(item_id)['values'][2]
             if item_id in self.selected_items:
-                self.selected_items.pop(self.online_status[int(index)])
+                self.selected_items.pop(self.online_status[DeviceIp]["deviceMsg"])
             else:
-                self.selected_items.append(self.online_status[int(index)])
+                self.selected_items.append(self.online_status[DeviceIp]["deviceMsg"])
 
     def on_ctrl_press(self, event):
         if not self.ctrl_pressed:
@@ -176,8 +173,8 @@ class MainGui(Tk):
     def creare_msgbox_list(self):
         msgbox_frame = Frame(self, bg='#696969')
         msgbox_frame.pack(side="top", fill='both', expand=True, padx=10, pady=10)
-        text_frame  = Frame(msgbox_frame, bg='#696969')
-        text_frame .pack(side="left", fill='both', expand=True, padx=10, pady=10)
+        text_frame = Frame(msgbox_frame, bg='#696969')
+        text_frame.pack(side="left", fill='both', expand=True, padx=10, pady=10)
         scrollbar = Scrollbar(msgbox_frame)
         scrollbar.pack(side="right", fill='y')
         self.text_widget = Text(text_frame, fg='white', bg='#696969', wrap='word')
@@ -185,8 +182,8 @@ class MainGui(Tk):
         scrollbar.config(command=self.text_widget.yview)
         self.text_widget.config(yscrollcommand=scrollbar.set)
 
-    def printf(self,msg):
-        self.text_widget.insert(END, msg)
+    def printf(self, *args):
+        self.text_widget.insert(END, args)
 
 
 if __name__ == "__main__":
