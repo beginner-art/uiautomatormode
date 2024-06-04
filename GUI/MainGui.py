@@ -8,7 +8,6 @@ from MenuTabe import Buttons, Boxs
 from runconfig import WindowsSize
 import threading
 
-
 class MainGui(Tk):
     def __init__(self):
         super().__init__()
@@ -35,6 +34,7 @@ class MainGui(Tk):
     :return
     """
 
+
     def update_list_state(self, online_state):  # TODO: 待修改
         if not isinstance(online_state, list):
             online_state = [online_state]
@@ -49,24 +49,34 @@ class MainGui(Tk):
             if not found:
                 itemId = self.box_list.insert("", "end", values=device_new.to_set())
                 self.online_status[device_new.DeviceIp] = {
-                    "itemId": itemId,
-                    "deviceMsg": device_new
+                    "itemId":itemId,
+                    "deviceMsg":device_new
                 }
 
+
+
     def get_kwargs_msg(self, **kwargs):
-        for i in list(kwargs.keys()):
-            if getattr(self, i, None) is None:
-                return {}
-            kwargs[i] = getattr(self, i, None)
-            return kwargs
+        for key,value in list(kwargs.items()):
+            if not value:
+                if getattr(self,key,None) is None:
+                    kwargs.pop(key)
+                else:
+                    kwargs[key] = getattr(self, key, None)
+            else:
+                continue
+        return kwargs
+
+
 
     def data_update_msg(self, MsgMenu, **kwargs):
+
         MsgClass, MsgFunction = MsgMenu
         if kwargs:
             kwargs = self.get_kwargs_msg(**kwargs)
         thread = threading.Thread(target=self.call_break_method, args=(MsgClass, MsgFunction), kwargs=kwargs)
         thread.start()
-        self.box_frame.after(100, self.check_for_result)
+        self.box_frame.after(100,self.check_for_result)
+
 
     def call_break_method(self, *args, **kwargs):
         if hasattr(*args):
@@ -116,7 +126,7 @@ class MainGui(Tk):
         self.menu_window.withdraw()
         menu = Menu(self.menu_window, tearoff=0)
         for IdMenu, MsgMenu in Buttons[selectId].items():
-            command_func = partial(self.data_update_msg, MsgMenu, selected_items=None)
+            command_func = partial(self.data_update_msg, MsgMenu,caseId=IdMenu,selected_items=None)
             menu.add_command(label=IdMenu, command=command_func)
         menu.post(button_x, button_y)
         return "break"
@@ -162,6 +172,7 @@ class MainGui(Tk):
             else:
                 self.selected_items.append(self.online_status[DeviceIp]["deviceMsg"])
 
+
     def on_ctrl_press(self, event):
         if not self.ctrl_pressed:
             self.selected_items = list()
@@ -173,8 +184,8 @@ class MainGui(Tk):
     def creare_msgbox_list(self):
         msgbox_frame = Frame(self, bg='#696969')
         msgbox_frame.pack(side="top", fill='both', expand=True, padx=10, pady=10)
-        text_frame = Frame(msgbox_frame, bg='#696969')
-        text_frame.pack(side="left", fill='both', expand=True, padx=10, pady=10)
+        text_frame  = Frame(msgbox_frame, bg='#696969')
+        text_frame .pack(side="left", fill='both', expand=True, padx=10, pady=10)
         scrollbar = Scrollbar(msgbox_frame)
         scrollbar.pack(side="right", fill='y')
         self.text_widget = Text(text_frame, fg='white', bg='#696969', wrap='word')
@@ -182,7 +193,7 @@ class MainGui(Tk):
         scrollbar.config(command=self.text_widget.yview)
         self.text_widget.config(yscrollcommand=scrollbar.set)
 
-    def printf(self, *args):
+    def printf(self,*args):
         self.text_widget.insert(END, args)
 
 

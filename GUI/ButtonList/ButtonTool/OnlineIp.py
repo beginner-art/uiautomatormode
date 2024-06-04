@@ -48,7 +48,7 @@ class OnlineIp(ConfigBase):
                     online_status.append(status)
             return online_status
 
-    def getOnlineIp(self):
+    def getOnlineIp(self,caseId=None):
         event = threading.Event()
         def worker():
             self.online_status = []

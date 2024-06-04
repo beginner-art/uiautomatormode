@@ -1,20 +1,12 @@
+from GUI.ButtonList.ButtonCase.CaseBase import CaseBase
 import threading
 
-# 全局变量
-threads = []
-stop_events = {}
-quitid = None
 
-
-class MainBase(threading.Thread):
+class a(threading.Thread):
     def __init__(self):
-        threading.Thread.__init__(self)
+        super().__init__()
         self.model_state = False
         self.cacheMsg = None
-
-    def stop_model_event(self,cacheMsg):
-        self.model_state = False
-        self.join(30)
 
     def run(self):
         while self.model_state:
@@ -26,3 +18,19 @@ class MainBase(threading.Thread):
     def test_flow(self):
         pass
 
+
+
+class MainBase:
+    def __init__(self):
+        self.thread = []
+        self.selected_items = None
+
+    def start_flow(self,caseId=None ,selected_items=None):
+        print("123",selected_items)
+        if not selected_items:
+            return
+        self.selected_items = selected_items
+        for cacheId in selected_items:
+            print(caseId)
+            print(selected_items)
+            # self.thread.append(CaseBase().)
