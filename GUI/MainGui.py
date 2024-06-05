@@ -15,6 +15,7 @@ class MainGui(Tk):
         self.text_widget = None
         self.item_id = None
         self.cacheMsg = None
+        self.caseCacheList = {}
         self.menu_window = None
         self.ctrl_pressed = False
         self.selected_items = None
@@ -78,7 +79,8 @@ class MainGui(Tk):
             thread.start()
             self.box_frame.after(100, self.check_for_result)
             return
-
+        elif  kwargs.get('caseId') =="终止当前任务":
+            pass
         thread = threading.Thread(target=self.call_break_method, args=(MsgClass, MsgFunction), kwargs=kwargs)
         thread.start()
         self.box_frame.after(100,self.check_for_result)
@@ -95,8 +97,6 @@ class MainGui(Tk):
         else:
             other_subclass_instance, method_name = args
             raise AttributeError(f"{other_subclass_instance.__class__.__name__} has no attribute {method_name}")
-
-
 
 
     def call_break_method(self, *args, **kwargs):
