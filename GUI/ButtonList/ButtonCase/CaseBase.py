@@ -1,28 +1,37 @@
 import threading
 
-# 全局变量
-threads = []
-stop_events = {}
-quitid = None
+import time
 
 
-class CaseBase(threading.Thread):
+class CaseBase:
     def __init__(self):
-        threading.Thread.__init__(self)
-        self.model_state = False
-        self.cacheMsg = None
+        self.caseId = None
+        self.selected_items = None
+        self.eventDict = {}
+        self.threadDict = {}
 
-    def stop_model_event(self,cacheMsg):
-        self.model_state = False
-        self.join(30)
+    def stop_flow(self, cacheMsg):
+        if cacheMsg.DeviceIp in self.eventDict:
+            self.eventDict[cacheMsg.DeviceIp].set()
+        if self.threadDict[cacheMsg.DeviceIp].is_alive():
+            time.sleep(0.1)  # 简单地轮询线程是否已退出
+            self.selected_items = [i for i in self.selected_items if not i.DeviceIp == cacheMsg.DeviceIp]
+            self.eventDict.pop(cacheMsg.DeviceIp)
+            self.threadDict.pop(cacheMsg.DeviceIp)
+            cacheMsg.DeviceWork = "未工作状态"
+        return cacheMsg
 
-    def run(self):
-        while self.model_state:
-            print(f"开始线程: {self.cacheMsg.DeviceName}")
-            self.test_flow()
-        print(f"退出线程: {self.cacheMsg.DeviceName}")
+    def start_flow(self, selected_items, caseId=None):
+        self.caseId = caseId
+        self.selected_items = selected_items
+        for i in selected_items:
+            stop_event = threading.Event()
+            thread = threading.Thread(target=self.test_flow, args=(i, stop_event))
+            thread.start()
+            self.eventDict[i.DeviceIp] = stop_event
+            self.threadDict[i.DeviceIp] = thread
+            i.DeviceWork = "工作状态"
+        return selected_items
 
-    # 定义一个函数，用于在线程中打印时间
-    def test_flow(self):
+    def test_flow(self, cacheMsg, stop_event):
         pass
-

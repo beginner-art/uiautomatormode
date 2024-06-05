@@ -11,6 +11,7 @@ import threading
 class MainGui(Tk):
     def __init__(self):
         super().__init__()
+        self.caseList = {}
         self.text_widget = None
         self.item_id = None
         self.cacheMsg = None
@@ -69,13 +70,33 @@ class MainGui(Tk):
 
 
     def data_update_msg(self, MsgMenu, **kwargs):
-
         MsgClass, MsgFunction = MsgMenu
         if kwargs:
             kwargs = self.get_kwargs_msg(**kwargs)
+        elif kwargs.get('caseId') in list(Buttons['项目'].keys()):
+            thread = threading.Thread(target=self.call_break_case, args=(kwargs.get('caseId'),MsgClass, MsgFunction), kwargs=kwargs)
+            thread.start()
+            self.box_frame.after(100, self.check_for_result)
+            return
+
         thread = threading.Thread(target=self.call_break_method, args=(MsgClass, MsgFunction), kwargs=kwargs)
         thread.start()
         self.box_frame.after(100,self.check_for_result)
+
+
+    def call_break_case(self, *args, **kwargs):
+        caseName,caseObj,caseFunction = args
+        args = caseObj,caseFunction
+        if hasattr(*args):
+            method = getattr(*args)
+            result = method(**kwargs)
+            self.caseList[caseName] = caseObj
+            self.result_queue.put(result)
+        else:
+            other_subclass_instance, method_name = args
+            raise AttributeError(f"{other_subclass_instance.__class__.__name__} has no attribute {method_name}")
+
+
 
 
     def call_break_method(self, *args, **kwargs):
