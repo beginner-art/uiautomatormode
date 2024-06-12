@@ -42,7 +42,7 @@ class ConnectPhone(ConfigBase):
         if testIp == HostIp:
             return True
 
-    def test_model_connect(self, cacheMsg):
+    def test_model_connect(self, cacheMsg,caseId=None):
         self.cacheMsg = cacheMsg
         if self.cacheMsg.DeviceIp == get_host_ip():
             device_ip = "127.0.0.1"

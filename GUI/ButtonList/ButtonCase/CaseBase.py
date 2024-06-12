@@ -10,20 +10,21 @@ class CaseBase:
         self.eventDict = {}
         self.threadDict = {}
 
-    def stop_flow(self, cacheMsg):
+    def stop_flow(self, cacheMsg,caseId=None):
         if cacheMsg.DeviceIp in self.eventDict:
             self.eventDict[cacheMsg.DeviceIp].set()
         if self.threadDict[cacheMsg.DeviceIp].is_alive():
-            time.sleep(0.1)  # 简单地轮询线程是否已退出
             self.selected_items = [i for i in self.selected_items if not i.DeviceIp == cacheMsg.DeviceIp]
             self.eventDict.pop(cacheMsg.DeviceIp)
             self.threadDict.pop(cacheMsg.DeviceIp)
             cacheMsg.DeviceWork = "未工作状态"
         return cacheMsg
 
-    def start_flow(self, selected_items, caseId=None):
+    def start_flow(self, selected_items=None, caseId=None):
         self.caseId = caseId
         self.selected_items = selected_items
+        print(self.selected_items)
+
         for i in selected_items:
             stop_event = threading.Event()
             thread = threading.Thread(target=self.test_flow, args=(i, stop_event))

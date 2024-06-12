@@ -74,35 +74,23 @@ class MainGui(Tk):
         MsgClass, MsgFunction = MsgMenu
         if kwargs:
             kwargs = self.get_kwargs_msg(**kwargs)
-        elif kwargs.get('caseId') in list(Buttons['项目'].keys()):
-            thread = threading.Thread(target=self.call_break_case, args=(kwargs.get('caseId'),MsgClass, MsgFunction), kwargs=kwargs)
-            thread.start()
-            self.box_frame.after(100, self.check_for_result)
-            return
-        elif  kwargs.get('caseId') =="终止当前任务":
-            pass
-        thread = threading.Thread(target=self.call_break_method, args=(MsgClass, MsgFunction), kwargs=kwargs)
+        thread = threading.Thread(target=self.call_break_method, args=(kwargs.get("caseId"),MsgClass, MsgFunction), kwargs=kwargs)
         thread.start()
         self.box_frame.after(100,self.check_for_result)
 
 
-    def call_break_case(self, *args, **kwargs):
-        caseName,caseObj,caseFunction = args
-        args = caseObj,caseFunction
-        if hasattr(*args):
-            method = getattr(*args)
-            result = method(**kwargs)
-            self.caseList[caseName] = caseObj
-            self.result_queue.put(result)
-        else:
-            other_subclass_instance, method_name = args
-            raise AttributeError(f"{other_subclass_instance.__class__.__name__} has no attribute {method_name}")
-
-
     def call_break_method(self, *args, **kwargs):
-        if hasattr(*args):
-            method = getattr(*args)
+        caseId,caseObj,caseFunc = args
+        if hasattr(caseObj,caseFunc):
+            if caseId == "终止当前任务":
+                for key,value in list(self.caseList.items()):
+                    if kwargs['cacheMsg'] in value:
+                        caseObj = key
+                        caseFunc = "stop_flow"
+            method = getattr(caseObj,caseFunc)
             result = method(**kwargs)
+            if caseId in list(Buttons['项目'].keys()):
+                self.caseList[caseObj] = result
             self.result_queue.put(result)
         else:
             other_subclass_instance, method_name = args
@@ -169,7 +157,7 @@ class MainGui(Tk):
         self.bind('<KeyRelease-Control_L>', self.on_ctrl_release)
         self.popup_menu = Menu(self.box_frame, tearoff=0)
         for IdMenu, MsgMenu in Boxs.items():
-            command_func = partial(self.data_update_msg, MsgMenu, cacheMsg=None)
+            command_func = partial(self.data_update_msg, MsgMenu,caseId=IdMenu, cacheMsg=None)
             self.popup_menu.add_command(label=IdMenu, command=command_func)
 
     def popup_menu(self, event):
@@ -188,10 +176,19 @@ class MainGui(Tk):
             if item_id in ('none', ''):
                 return
             DeviceIp = self.box_list.item(item_id)['values'][2]
-            if item_id in self.selected_items:
-                self.selected_items.pop(self.online_status[DeviceIp]["deviceMsg"])
+            # 现在我们有了IP字符串，可以用来从self.online_status中查找设备信息
+            if DeviceIp in self.online_status:  # 使用IP字符串作为键来查找
+                device_info = self.online_status[DeviceIp]
+                msg = device_info["deviceMsg"]
+
+                # 更新selected_items列表
+                if msg in self.selected_items:
+                    self.selected_items.remove(msg)  # 使用remove方法而不是pop，因为pop需要索引
+                else:
+                    self.selected_items.append(msg)
             else:
-                self.selected_items.append(self.online_status[DeviceIp]["deviceMsg"])
+                # 可能需要在这里处理IP不存在于self.online_status中的情况
+                pass
 
 
     def on_ctrl_press(self, event):
