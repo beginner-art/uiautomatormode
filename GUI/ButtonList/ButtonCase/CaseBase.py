@@ -23,8 +23,6 @@ class CaseBase:
     def start_flow(self, selected_items=None, caseId=None):
         self.caseId = caseId
         self.selected_items = selected_items
-        print(self.selected_items)
-
         for i in selected_items:
             stop_event = threading.Event()
             thread = threading.Thread(target=self.test_flow, args=(i, stop_event))
